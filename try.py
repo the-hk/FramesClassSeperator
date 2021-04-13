@@ -16,10 +16,19 @@ host = "/home/hk/Desktop/seniorDesignProject/videoplayback.mp4"#0 #"http://192.1
 cap = cv2.VideoCapture(host)
 
     
+def callFolders():
+    flist = os.listdir('/home/hk/Desktop/seniorDesignProject/classes/')
+    a=0
+    for item in flist:
+        a=a+1
+        lbox.insert(a, item)
+    lbox.grid()
+
 
 def openNewClass_button_callback():
     directory="/home/hk/Desktop/seniorDesignProject/classes/"
     result=textExample.get("1.0","end")
+    lbox.delete(0,tkinter.END)
     
     try:
         if not os.path.exists(directory+result):
@@ -32,6 +41,7 @@ def openNewClass_button_callback():
         l = Label(lmain, text = 'Error: Creating directory. ' , font = "Helvetica 20 bold italic" )
         l.grid(row = 20, column = 10)    
         l.after(1000,lambda: l.destroy())
+    callFolders()    
 
 
 
@@ -91,7 +101,7 @@ def loadVideo_button_callback():
 def video_stream():
     global cap
     global root
-
+    
     ret, frame = cap.read()
     if ret is True:        
         cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
@@ -100,6 +110,7 @@ def video_stream():
         imgtk = ImageTk.PhotoImage(image=img)
         lmain.imgtk = imgtk
         lmain.configure(image=imgtk)
+
         lmain.after(1, video_stream) 
 
     elif ret is False:
@@ -121,8 +132,10 @@ root.configure(background='#787467')
 
 #open_img()
 app = LabelFrame(root, bg='#787467')
-app.place(x = 0,y = 0)
+app.pack(side=TOP)
 
+app2 = LabelFrame(root, bg='#787467')
+app2.pack(side=BOTTOM)
 
 # Create a label in the frame
 lmain = Label(app, background='#787467')
@@ -135,7 +148,7 @@ lmain.grid(row = 3, column = 5)
 
 #photo = PhotoImage(file = "/home/hk/Desktop/python_examples/inovar3.png" ) 
 
-ss_button = Button(root, text = "screen shot", padx = 30, pady = 20, command = ss_button_callback,bg="yellow",font = "Helvetica 12 bold italic")
+ss_button = Button(root, text = "screenshot", padx = 30, pady = 20, command = ss_button_callback,bg="yellow",font = "Helvetica 12 bold italic")
 ss_button.pack(side=RIGHT,expand=True)
 #
 play_button = Button(root, text = "play", padx = 30, pady = 20, command = play_button_callback,bg="yellow",font = "Helvetica 12 bold italic")
@@ -162,14 +175,7 @@ textExample.pack(side=RIGHT)
 
 flist = os.listdir('/home/hk/Desktop/seniorDesignProject/classes/')
  
-lbox = Listbox(root)
-
- 
-# THE ITEMS INSERTED WITH A LOOP
-for item in flist:
-    lbox.insert(END, item)
- 
-lbox.pack(side=TOP)
+lbox = Listbox(app2)
 
 
 #open_img()
