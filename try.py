@@ -6,22 +6,36 @@ import pyscreenshot as ImageGrab
 import pyautogui
 import cv2
 import os 
+from datetime import date
 
 global cap
 global root
 global host
 global result 
+global classDir  
+global FrameNumber
+global today
+FrameNumber=0
+today = date.today()
 
 host = "/home/hk/Desktop/seniorDesignProject/videoplayback.mp4"#0 #"http://192.168.43.1:8080"
 cap = cv2.VideoCapture(host)
 
+def selected_item():
+    global classDir  
+    # Traverse the tuple returned by
+    # curselection method and print
+    # correspoding value(s) in the listbox
+    for i in lbox.curselection():
+        print(lbox.get(i))
+        classDir = lbox.get(i)
     
 def callFolders():
     flist = os.listdir('/home/hk/Desktop/seniorDesignProject/classes/')
     a=0
     for item in flist:
         a=a+1
-        lbox.insert(a, item)
+        lbox.insert(a, item) 
     lbox.grid()
 
 
@@ -47,9 +61,15 @@ def openNewClass_button_callback():
 
 
 def ss_button_callback():
-    print("screenshot was taken")
+    global classDir
+    global FrameNumber
+    global today
+    print("frame was saved")
+    imDir=classDir
+    newDir="/home/hk/Desktop/seniorDesignProject/classes/"+imDir+"/"+str(FrameNumber)+"frame"+str(today)+".png"
+    
     im=ImageGrab.grab()#bbox=(500,10,1000,500)
-    im.save(r"/home/hk/Desktop/seniorDesignProject/hk.png")
+    im.save(newDir)
     l = Label(lmain, text = " screenshot was taken", font = "Helvetica 20 bold italic" )
     l.grid(row = 5, column = 10)    
     l.after(1000,lambda: l.destroy())
@@ -101,11 +121,13 @@ def loadVideo_button_callback():
 def video_stream():
     global cap
     global root
+    global FrameNumber
     
     ret, frame = cap.read()
     if ret is True:        
         cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
+        FrameNumber=FrameNumber+1
         #img = img.resize((root.winfo_screenwidth(), root.winfo_screenheight()), Image.ANTIALIAS)
         imgtk = ImageTk.PhotoImage(image=img)
         lmain.imgtk = imgtk
@@ -148,7 +170,7 @@ lmain.grid(row = 3, column = 5)
 
 #photo = PhotoImage(file = "/home/hk/Desktop/python_examples/inovar3.png" ) 
 
-ss_button = Button(root, text = "screenshot", padx = 30, pady = 20, command = ss_button_callback,bg="yellow",font = "Helvetica 12 bold italic")
+ss_button = Button(root, text = "save frame", padx = 30, pady = 20, command = ss_button_callback,bg="yellow",font = "Helvetica 12 bold italic")
 ss_button.pack(side=RIGHT,expand=True)
 #
 play_button = Button(root, text = "play", padx = 30, pady = 20, command = play_button_callback,bg="yellow",font = "Helvetica 12 bold italic")
@@ -176,6 +198,12 @@ textExample.pack(side=RIGHT)
 flist = os.listdir('/home/hk/Desktop/seniorDesignProject/classes/')
  
 lbox = Listbox(app2)
+
+
+lbutton = Button(app2, text='change directory', command=selected_item)
+  
+# Placing the button and listbox
+lbutton.grid()
 
 
 #open_img()
