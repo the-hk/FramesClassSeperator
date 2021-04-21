@@ -7,6 +7,7 @@ import pyautogui
 import cv2
 import os 
 from datetime import date
+import numpy as np
 
 global cap
 global root
@@ -15,11 +16,25 @@ global result
 global classDir  
 global FrameNumber
 global today
+global frame 
+global paused
+global storedFrames
+global filename
+global videoLoad
+
+
+filename = "sa"
+storedFrames = np.zeros(10)
+paused = False
 FrameNumber=0
 today = date.today()
+root=Tk()
+videoLoad = False
 
-host = "/home/hk/Desktop/seniorDesignProject/videoplayback.mp4"#0 #"http://192.168.43.1:8080"
+host ="/home/hk/Desktop/seniorDesignProject/videoplayback.mp4"#0 #"http://192.168.43.1:8080"
 cap = cv2.VideoCapture(host)
+
+        
 
 def selected_item():
     global classDir  
@@ -52,9 +67,9 @@ def openNewClass_button_callback():
             l.after(1000,lambda: l.destroy())
     except :
         print ('Error: Creating directory')
-        l = Label(lmain, text = 'Error: Creating directory. ' , font = "Helvetica 20 bold italic" )
-        l.grid(row = 20, column = 10)    
-        l.after(1000,lambda: l.destroy())
+        #l = Label(lmain, text = 'Error: Creating directory. ' , font = "Helvetica 20 bold italic" )
+        #l.grid(row = 20, column = 10)    
+        #l.after(1000,lambda: l.destroy())
     callFolders()    
 
 
@@ -64,65 +79,75 @@ def ss_button_callback():
     global classDir
     global FrameNumber
     global today
+    global frame
+
     print("frame was saved")
     imDir=classDir
-    newDir="/home/hk/Desktop/seniorDesignProject/classes/"+imDir+"/"+str(FrameNumber)+"frame"+str(today)+".png"
+    newDir="/home/hk/Desktop/seniorDesignProject/classes/"+imDir+"/"+str(FrameNumber)+"frame"+str(today)+".jpg"
     
-    im=ImageGrab.grab()#bbox=(500,10,1000,500)
-    im.save(newDir)
-    l = Label(lmain, text = " screenshot was taken", font = "Helvetica 20 bold italic" )
-    l.grid(row = 5, column = 10)    
-    l.after(1000,lambda: l.destroy())
+    #im=ImageGrab.grab()#bbox=(500,10,1000,500)
+    #im.save(newDir)
+    cv2.imwrite(newDir,frame) 
+    #l = Label(lmain, text = " screenshot was taken", font = "Helvetica 20 bold italic" )
+    #l.grid(row = 5, column = 10)    
+    #l.after(1000,lambda: l.destroy())
 
 def play_button_callback():
+    global paused
+
+
     print("played")
     
+    paused = False
+    return paused
     
-    l = Label(lmain, text = " played", font = "Helvetica 20 bold italic" )
-    l.grid(row = 5, column = 10)    
-    l.after(1000,lambda: l.destroy())
 
 def stop_button_callback():
+    global paused
+
     print("stopped")
-    while play_button is False:
-        a=a+1
+   
+    paused = True
+    return paused
     
-    l = Label(lmain, text = " stopped", font = "Helvetica 20 bold italic" )
-    l.grid(row = 5, column = 10)    
-    l.after(1000,lambda: l.destroy())
 
 def prevF_button_callback():
+
     print("previous frame")
     
-    
-    l = Label(lmain, text = " previous frame", font = "Helvetica 20 bold italic" )
-    l.grid(row = 5, column = 10)    
-    l.after(1000,lambda: l.destroy())
-
-def nextF_button_callback():
-    print("next frame")
-  
-  
-    l = Label(lmain, text = " next frame", font = "Helvetica 20 bold italic" )
-    l.grid(row = 5, column = 10)    
-    l.after(1000,lambda: l.destroy())
- 
-
-def loadVideo_button_callback():
-    print("loading video")
-    
-    
-    l = Label(lmain, text = " video loaded", font = "Helvetica 20 bold italic" )
-    l.grid(row = 5, column = 10)    
-    l.after(1000,lambda: l.destroy())      
-
-
-# function for video streaming
-def video_stream():
     global cap
     global root
     global FrameNumber
+    global frame
+    global paused
+
+    cap.set(cv2.CAP_PROP_POS_FRAMES, FrameNumber)
+    ret, frame = cap.read()
+    if ret is True:        
+        cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+        img = Image.fromarray(cv2image)
+        FrameNumber=FrameNumber-2
+        #img = img.resize((root.winfo_screenwidth(), root.winfo_screenheight()), Image.ANTIALIAS)
+        imgtk = ImageTk.PhotoImage(image=img)
+        lmain.imgtk = imgtk
+        lmain.configure(image=imgtk)
+    elif ret is False: 
+        cap = cv2.VideoCapture(host)
     
+    
+    #l = Label(lmain, text = " previous frame", font = "Helvetica 20 bold italic" )
+    #l.grid(row = 5, column = 10)    
+    #l.after(1000,lambda: l.destroy())
+
+def nextF_button_callback():
+    global cap
+    global root
+    global FrameNumber
+    global frame
+    global paused
+
+    print("next frame")
+    cap.set(cv2.CAP_PROP_POS_FRAMES, FrameNumber)
     ret, frame = cap.read()
     if ret is True:        
         cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
@@ -132,25 +157,53 @@ def video_stream():
         imgtk = ImageTk.PhotoImage(image=img)
         lmain.imgtk = imgtk
         lmain.configure(image=imgtk)
-
-        lmain.after(1, video_stream) 
-
     elif ret is False:
-        openfn="/home/hk/Desktop/seniorDesignProject/hk.png"
-        x = openfn
-        img = Image.open(x)
-        #img = img.resize((root.winfo_screenwidth()-70, root.winfo_screenheight()-200), Image.ANTIALIAS)
-        img = ImageTk.PhotoImage(img)
-        lmain.img = img
-        lmain.configure(image = img) 
         cap = cv2.VideoCapture(host)
-        lmain.after(1, video_stream)
+    
+  
+    #l = Label(lmain, text = " next frame", font = "Helvetica 20 bold italic" )
+    #l.grid(row = 5, column = 10)    
+    #l.after(1000,lambda: l.destroy())
+ 
 
-root = Tk()
-root.title("video laryngoscope")
+def loadVideo_button_callback():
+    global filename
+    global videoLoad
+
+    filename = filedialog.askopenfilename(initialdir = "/home/hk/Desktop",title = "Select a File")
+    video_stream()
+    videoLoad = True
+    
+    #l = Label(lmain, text = " video loaded", font = "Helvetica 20 bold italic" )
+    #l.grid(row = 5, column = 10)    
+    #l.after(1000,lambda: l.destroy())      
+
+
+# function for video streaming
+def video_stream():
+    global cap
+    global root
+    global FrameNumber
+    global frame
+    global paused
+    if paused is False:
+        ret, frame = cap.read()
+        if ret is True:        
+            cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+            img = Image.fromarray(cv2image)
+            FrameNumber=FrameNumber+1
+            #img = img.resize((root.winfo_screenwidth(), root.winfo_screenheight()), Image.ANTIALIAS)
+            imgtk = ImageTk.PhotoImage(image=img)
+            lmain.imgtk = imgtk
+            lmain.configure(image=imgtk)
+            lmain.after(1, video_stream) 
+        elif ret is False:
+            lmain.after(1, video_stream)
+    else:
+        lmain.after(1, video_stream)
 root.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))# Create a frame
 root.configure(background='#787467')
-#
+# 
 
 #open_img()
 app = LabelFrame(root, bg='#787467')
@@ -207,5 +260,8 @@ lbutton.grid()
 
 
 #open_img()
-video_stream()
+if videoLoad==True:
+    cap = cv2.VideoCapture(filename)
+    video_stream()
+
 root.mainloop()
