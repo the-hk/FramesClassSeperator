@@ -31,7 +31,7 @@ today = date.today()
 root=Tk()
 videoLoad = False
 
-host ="/home/hk/Desktop/seniorDesignProject/videoplayback.mp4"#0 #"http://192.168.43.1:8080"
+host ="/home/hk/Desktop/projects/Labeler_video_player_for_ML/videoplayback.mp4"#0 #"http://192.168.43.1:8080"
 cap = cv2.VideoCapture(host)
 
         
@@ -46,7 +46,7 @@ def selected_item():
         classDir = lbox.get(i)
     
 def callFolders():
-    flist = os.listdir('/home/hk/Desktop/seniorDesignProject/classes/')
+    flist = os.listdir('/home/hk/Desktop/projects/Labeler_video_player_for_ML/classes/')
     a=0
     for item in flist:
         a=a+1
@@ -55,7 +55,7 @@ def callFolders():
 
 
 def openNewClass_button_callback():
-    directory="/home/hk/Desktop/seniorDesignProject/classes/"
+    directory="/home/hk/Desktop/projects/Labeler_video_player_for_ML/classes/"
     result=textExample.get("1.0","end")
     lbox.delete(0,tkinter.END)
     
@@ -83,7 +83,7 @@ def ss_button_callback():
 
     print("frame was saved")
     imDir=classDir
-    newDir="/home/hk/Desktop/seniorDesignProject/classes/"+imDir+"/"+str(FrameNumber)+"frame"+str(today)+".jpg"
+    newDir="/home/hk/Desktop/projects/Labeler_video_player_for_ML/classes/"+imDir+"/"+str(FrameNumber)+"frame"+str(today)+".jpg"
     
     #im=ImageGrab.grab()#bbox=(500,10,1000,500)
     #im.save(newDir)
@@ -248,7 +248,7 @@ textExample=Text(root,height=1)
 textExample.pack(side=RIGHT)
 
 
-flist = os.listdir('/home/hk/Desktop/seniorDesignProject/classes/')
+flist = os.listdir('/home/hk/Desktop/projects/Labeler_video_player_for_ML/classes/')
  
 lbox = Listbox(app2)
 
