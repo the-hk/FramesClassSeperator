@@ -8,6 +8,10 @@ import cv2
 import os 
 from datetime import date
 import numpy as np
+import subprocess
+import sys
+from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
+
 
 global cap
 global root
@@ -21,6 +25,8 @@ global paused
 global storedFrames
 global filename
 global videoLoad
+global totalframecount
+global video_total_duration
 
 
 filename = "sa"
@@ -34,7 +40,35 @@ videoLoad = False
 host ="/home/hk/Desktop/projects/Labeler_video_player_for_ML/videoplayback.mp4"#0 #"http://192.168.43.1:8080"
 cap = cv2.VideoCapture(host)
 
-        
+def get_length(filename):
+    result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
+                             "format=duration", "-of",
+                             "default=noprint_wrappers=1:nokey=1", filename],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
+    return float(result.stdout)
+
+
+def cut_the_video(detected_time,input_name_path,output_name_path):
+    if detected_time <10:
+        start_time = 0
+    else:
+        start_time = detected_time-10
+    end_time = detected_time + 10
+    
+    ffmpeg_extract_subclip(input_name_path, start_time, end_time, targetname=output_name_path)
+    convert_video_to_audio_ffmpeg(output_name_path,output_ext="wav")
+
+
+def convert_video_to_audio_ffmpeg(video_file,output_ext="wav"):
+    filename, ext = os.path.splitext(video_file)
+    subprocess.call(["ffmpeg", "-y", "-i", video_file, f"{filename}.{output_ext}"], 
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.STDOUT)
+    if os.path.exists(video_file):
+        os.remove(video_file)
+    else:
+        print("The file does not exist")        
 
 def selected_item():
     global classDir  
@@ -80,17 +114,19 @@ def ss_button_callback():
     global FrameNumber
     global today
     global frame
+    global filename
+    global totalframecount
+    global video_total_duration
 
-    print("frame was saved")
     imDir=classDir
     newDir="/home/hk/Desktop/projects/Labeler_video_player_for_ML/classes/"+imDir+"/"+str(FrameNumber)+"frame"+str(today)+".jpg"
     
-    #im=ImageGrab.grab()#bbox=(500,10,1000,500)
-    #im.save(newDir)
     cv2.imwrite(newDir,frame) 
-    #l = Label(lmain, text = " screenshot was taken", font = "Helvetica 20 bold italic" )
-    #l.grid(row = 5, column = 10)    
-    #l.after(1000,lambda: l.destroy())
+    print("frame was saved")
+    fps = totalframecount/video_total_duration
+    detected_time = FrameNumber/fps
+    output_name_path = "/home/hk/Desktop/projects/Labeler_video_player_for_ML/classes/"+imDir+"/"+str(FrameNumber)+"frame"+str(today)+".mp4"
+    cut_the_video(detected_time,filename,output_name_path)
 
 def play_button_callback():
     global paused
@@ -160,17 +196,18 @@ def nextF_button_callback():
     elif ret is False:
         cap = cv2.VideoCapture(host)
     
-  
-    #l = Label(lmain, text = " next frame", font = "Helvetica 20 bold italic" )
-    #l.grid(row = 5, column = 10)    
-    #l.after(1000,lambda: l.destroy())
- 
 
 def loadVideo_button_callback():
     global filename
     global videoLoad
+    global cap
+    global totalframecount
+    global video_total_duration
 
     filename = filedialog.askopenfilename(initialdir = "/home/hk/Desktop",title = "Select a File")
+    totalframecount= int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    video_total_duration = get_length(filename)
+    
     video_stream()
     videoLoad = True
     
