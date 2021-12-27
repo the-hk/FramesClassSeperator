@@ -11,6 +11,11 @@ import numpy as np
 import subprocess
 import sys
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
+import scipy as sp
+from scipy.io.wavfile import read
+from scipy.io.wavfile import write    
+from scipy import signal
+import matplotlib.pyplot as plt
 
 
 global cap
@@ -40,6 +45,30 @@ videoLoad = False
 host ="/home/hk/Desktop/projects/Labeler_video_player_for_ML/videoplayback.mp4"#0 #"http://192.168.43.1:8080"
 cap = cv2.VideoCapture(host)
 
+def soundfilter(filename):
+    (Frequency, array) = read(filename) # Reading the sound file.
+    time = array/Frequency
+    len(array) # length of the array
+    FourierTransformation = sp.fft.fft(array) # FFT of signal
+    scale = np.linspace(0, Frequency, len(array)) # Plot scaling
+    b,a = signal.butter(6, 60/(Frequency/2), btype='highpass') # ButterWorth filter 4350
+    filteredSignal = signal.lfilter(b,a,array)
+    c,d = signal.butter(2, 2005/(Frequency/2), btype='lowpass') # ButterWorth lowpass-filter
+    newFilteredSignal = signal.lfilter(c,d,filteredSignal) # Applying the filter to the signal
+    newFilteredSignal = np.asarray(newFilteredSignal, dtype=np.int16)
+
+    newFilteredSignal = newFilteredSignal * 100
+    plt.plot(newFilteredSignal)
+    name_of_the_sound, ext = os.path.splitext(filename)
+
+    write(name_of_the_sound+"filtered"+ext, Frequency, newFilteredSignal) # Saving it to the file.
+    if os.path.exists(filename):
+        os.remove(filename)
+        print("The file was deleted") 
+    else:
+        print("The file does not exist")  
+
+
 def get_length(filename):
     result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
                              "format=duration", "-of",
@@ -58,6 +87,7 @@ def cut_the_video(detected_time,input_name_path,output_name_path):
     
     ffmpeg_extract_subclip(input_name_path, start_time, end_time, targetname=output_name_path)
     convert_video_to_audio_ffmpeg(output_name_path,output_ext="wav")
+
 
 
 def convert_video_to_audio_ffmpeg(video_file,output_ext="wav"):
@@ -127,6 +157,8 @@ def ss_button_callback():
     detected_time = FrameNumber/fps
     output_name_path = "/home/hk/Desktop/projects/Labeler_video_player_for_ML/classes/"+imDir+"/"+str(FrameNumber)+"frame"+str(today)+".mp4"
     cut_the_video(detected_time,filename,output_name_path)
+    output_name_path_for_filtered_signal = "/home/hk/Desktop/projects/Labeler_video_player_for_ML/classes/"+imDir+"/"+str(FrameNumber)+"frame"+str(today)+".wav"
+    soundfilter(output_name_path_for_filtered_signal)
 
 def play_button_callback():
     global paused
