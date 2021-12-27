@@ -79,11 +79,11 @@ def get_length(filename):
 
 
 def cut_the_video(detected_time,input_name_path,output_name_path):
-    if detected_time <10:
+    if detected_time <5:
         start_time = 0
     else:
-        start_time = detected_time-10
-    end_time = detected_time + 10
+        start_time = detected_time-5
+    end_time = detected_time + 5
     
     ffmpeg_extract_subclip(input_name_path, start_time, end_time, targetname=output_name_path)
     convert_video_to_audio_ffmpeg(output_name_path,output_ext="wav")
