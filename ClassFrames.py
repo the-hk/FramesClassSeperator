@@ -239,7 +239,8 @@ def loadVideo_button_callback():
     filename = filedialog.askopenfilename(initialdir = "/home/hk/Desktop",title = "Select a File")
     totalframecount= int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     video_total_duration = get_length(filename)
-    
+    host = filename
+    cap = cv2.VideoCapture(host)
     video_stream()
     videoLoad = True
     
